@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roots and Branches</title>
+<meta name="description" content="A 10-minute interactive lab on how one family's quarrel in 632 split Islam into Sunni and Shi‘a, and how that history echoes in the news today.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f1b16'/%3E%3Cpath d='M16 6v20M16 13l-7 6M16 13l7 6' stroke='%23c99a1c' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#e6ecea; --card:#fbfdfc; --ink:#1f1b16; --muted:#5d5448; --line:#d9cfbd;
+  --hashim:#0e6b5f; --hashim-tint:#dcefea;
+  --umayya:#a23f27; --umayya-tint:#f6e0d8;
+  --other:#8a6a12; --other-tint:#f3e9cc;
+  --khariji:#5a4a8c; --khariji-tint:#e6e1f3;
+  --gold:#c99a1c; --blood:#b3261e;
+  --ok:#1f7a3d; --ok-tint:#e1f2e6; --bad:#a3361f; --bad-tint:#f8e3dc;
+  --focus:#1d5fd1;
+}
+*{box-sizing:border-box}
+html{font-size:18px}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Source Sans 3",system-ui,sans-serif;line-height:1.5}
+h1,h2,h3{font-family:Amiri,Georgia,serif;line-height:1.15;margin:0}
+button{font:inherit;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+a{color:var(--hashim)}
+
+/* header */
+.top{position:sticky;top:0;z-index:20;background:var(--ink);color:#e6ecea;padding:10px 20px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px}
+.brand h1{font-size:1.35rem;color:#fff}
+.brand p{margin:0;font-size:.85rem;color:#d8cfbf}
+.steps{display:flex;gap:6px;flex-wrap:wrap;flex:1;justify-content:safe center}
+.steps button{background:transparent;border:1px solid #6b6255;color:#d8cfbf;border-radius:999px;padding:5px 13px;font-size:.85rem}
+.steps button.on{background:#e6ecea;color:var(--ink);border-color:#e6ecea;font-weight:700}
+.steps button.done{color:#fff;border-color:#a99f8f}
+.steps button.on.done{color:var(--ink)}
+.steps button:disabled{opacity:.4;cursor:not-allowed}
+.meta{display:flex;align-items:center;gap:10px}
+.pts{background:var(--gold);color:var(--ink);font-weight:700;border-radius:999px;padding:4px 12px;font-size:.9rem;white-space:nowrap}
+.ghost{background:transparent;border:1px solid #a99f8f;color:#e6ecea;border-radius:8px;padding:4px 12px;font-size:.85rem}
+
+/* layout */
+.layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(340px,1fr);gap:22px;max-width:1440px;margin:0 auto;padding:20px}
+.tree-panel{min-width:0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 12px 8px;align-self:start;position:sticky;top:var(--top,76px)}
+.tree-panel.picking-on{border-color:var(--focus);box-shadow:0 0 0 4px rgba(29,95,209,.25)}
+.tree-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:0 6px 6px}
+.tree-head h2{font-size:1.05rem}
+.tree-head span{font-size:.85rem;color:var(--muted)}
+.tree-scroll{overflow-x:auto}
+#tree{display:block;width:100%;min-width:640px;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;padding:8px 6px 2px;font-size:.85rem;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:5px;border:2px solid}
+.panel{min-width:0}
+
+/* tree svg */
+.node{cursor:pointer}
+.node rect{stroke-width:2;rx:9}
+.node text{font-family:"Source Sans 3",sans-serif;font-size:18px;font-weight:600;fill:var(--ink);pointer-events:none}
+.node text.sub{font-size:14px;font-weight:400;fill:var(--muted)}
+.c-root rect{fill:#dfe6e3;stroke:#6f7f79}
+.c-hashim rect{fill:var(--hashim-tint);stroke:var(--hashim)}
+.c-umayya rect{fill:var(--umayya-tint);stroke:var(--umayya)}
+.c-other rect{fill:var(--other-tint);stroke:var(--other)}
+.c-khariji rect{fill:var(--khariji-tint);stroke:var(--khariji);stroke-dasharray:6 4}
+.group rect{stroke-dasharray:6 4}
+.node.met rect{stroke-width:3}
+.node:hover rect,.node:focus-visible rect{filter:brightness(.95)}
+.node.sel rect{stroke:var(--ink);stroke-width:4}
+.node.ring rect{stroke:var(--hashim);stroke-width:5}
+.node.hl rect{stroke:var(--focus);stroke-width:5;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{stroke-opacity:.35}}
+.picking .node:not(.group):not(.c-root) rect{stroke-dasharray:none}
+.picking .node:hover rect{stroke:var(--focus);stroke-width:5}
+.edge{fill:none;stroke:#8c7f68;stroke-width:2}
+.edge.dot{stroke-dasharray:3 5}
+.edge.walk{stroke:var(--khariji);stroke-dasharray:8 5}
+.edge.marry{stroke:var(--hashim);stroke-width:3}
+.crown circle{fill:var(--gold);stroke:var(--ink);stroke-width:1.5}
+.crown text{font-size:15px;font-weight:700;fill:var(--ink);font-family:"Source Sans 3",sans-serif}
+.martyr circle{fill:var(--blood)}
+.martyr text{font-size:13px;fill:#fff;font-weight:700;font-family:"Source Sans 3",sans-serif}
+.boxlabel{font-size:14px;fill:var(--other);font-weight:700;font-family:"Source Sans 3",sans-serif;letter-spacing:.04em}
+.fade{opacity:.28}
+.via{font-size:14px;fill:var(--muted);font-style:italic;font-family:"Source Sans 3",sans-serif}
+
+/* cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:16px}
+.kicker{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:4px}
+.card h2{font-size:1.45rem;margin-bottom:8px}
+.card h3{font-size:1.12rem;margin-bottom:6px}
+.card p{margin:.4em 0}
+.lead{font-size:1.05rem}
+.muted{color:var(--muted)}
+.small{font-size:.88rem}
+.year{font-family:Amiri,Georgia,serif;font-size:2.4rem;font-weight:700;color:var(--umayya);line-height:1}
+.scene{border-left:4px solid var(--gold);padding:6px 0 6px 14px;margin:10px 0}
+.counter{display:inline-block;background:var(--other-tint);border-radius:999px;padding:3px 12px;font-weight:700;font-size:.9rem}
+.person{border:2px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0;background:#fff}
+.person h3{margin-bottom:2px}
+.sec{font-size:.85rem;color:var(--muted)}
+
+.q{border-top:1px dashed var(--line);margin-top:14px;padding-top:14px}
+.q .prompt{font-weight:700;font-size:1.05rem;margin-bottom:8px}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;background:#fff;border:2px solid var(--line);border-radius:10px;padding:10px 14px;color:var(--ink)}
+.opt:hover:not(:disabled){border-color:var(--ink)}
+.opt.ok{border-color:var(--ok);background:var(--ok-tint)}
+.opt.no{border-color:var(--bad);background:var(--bad-tint);text-decoration:line-through;text-decoration-color:rgba(0,0,0,.35)}
+.opt:disabled{cursor:default}
+.opts.row{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.opt .tag{white-space:nowrap;font-size:.88rem}
+.fb{border-radius:10px;padding:10px 14px;margin-top:10px}
+.fb.no{background:var(--bad-tint)}
+.fb.ok{background:var(--ok-tint)}
+.fb.clue{background:#e8eefb}
+.pickhint{display:flex;gap:10px;align-items:center;background:#e8eefb;border-radius:10px;padding:10px 14px;font-weight:600}
+.pickhint b{font-size:1.4rem}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.btn{background:var(--ink);color:#fff;border:0;border-radius:10px;padding:10px 18px;font-weight:700}
+.btn:hover{background:#3a3329}
+.btn.alt{background:#fff;color:var(--ink);border:2px solid var(--ink)}
+.btn.clue{background:#fff;color:var(--focus);border:2px solid var(--focus);padding:6px 14px;font-size:.9rem}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.earn{font-size:.85rem;color:var(--muted)}
+
+.tag{display:inline-block;font-family:Amiri,Georgia,serif;font-weight:700;border-radius:8px;padding:2px 10px;color:#fff;font-size:.95rem}
+.tag.leads{background:var(--hashim)}
+.tag.judges{background:var(--khariji)}
+.tag.remembers{background:var(--blood)}
+.tagcard{border:2px solid var(--ink);border-radius:12px;padding:12px 16px;margin-top:12px;background:#fff}
+.tagstrip{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 2px}
+
+/* leaves */
+.leaves{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:12px}
+.leaf{position:relative;text-align:left;background:#fff;border:2px solid var(--hashim);border-radius:4px 28px 4px 28px;padding:12px 14px 14px;color:var(--ink);min-height:96px}
+.leaf .place{font-family:Amiri,Georgia,serif;font-weight:700;font-size:1.1rem}
+.leaf .when{font-size:.85rem;color:var(--muted)}
+.leaf.open{background:var(--hashim-tint);border-width:3px}
+.leaf.solved::after{content:"✓";position:absolute;right:12px;top:8px;font-weight:700;color:var(--ok);font-size:1.1rem}
+.headline{font-family:Amiri,Georgia,serif;font-size:1.25rem;font-weight:700;margin:4px 0 8px}
+.badge{display:inline-block;font-size:.8rem;font-weight:700;border-radius:999px;padding:2px 10px;background:var(--other-tint);color:var(--other)}
+.cite{font-size:.9rem;background:#eef3f1;border-radius:10px;padding:10px 14px;margin-top:10px;word-break:break-word}
+.cite p{margin:.3em 0}
+.limits{border-left:4px solid var(--line);padding-left:12px;color:var(--muted)}
+
+/* sorting */
+.choose{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}
+.fact{background:#fff;border:2px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px}
+.fact .two{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.fact .two button{flex:1;min-width:130px;background:#fff;border:2px solid var(--line);border-radius:10px;padding:8px 10px;font-weight:700;color:var(--ink)}
+.fact .two button.pick{border-color:var(--ink);background:#dfe6e3}
+.fact.right{border-color:var(--ok)}
+.fact.wrong{border-color:var(--bad)}
+.verdict{font-size:.92rem;margin-top:6px}
+.meter{display:flex;height:34px;border-radius:10px;overflow:hidden;border:2px solid var(--ink);margin:12px 0 4px;font-weight:700;font-size:.9rem}
+.meter div{display:flex;align-items:center;justify-content:center;color:#fff;transition:flex-grow .6s}
+.meter .o{background:var(--hashim)}
+.meter .n{background:#c2751a}
+
+/* results */
+.score{font-family:Amiri,Georgia,serif;font-size:3rem;font-weight:700}
+.code{font-family:ui-monospace,Consolas,monospace;font-size:1.4rem;background:var(--ink);color:#fff;border-radius:10px;padding:8px 16px;display:inline-block;letter-spacing:.06em}
+.check{display:flex;gap:10px;align-items:flex-start;padding:6px 0}
+.check input{width:20px;height:20px;margin-top:3px;accent-color:var(--hashim)}
+
+dialog{border:0;border-radius:14px;max-width:620px;width:calc(100% - 32px);padding:22px 24px;background:var(--card);color:var(--ink)}
+dialog::backdrop{background:rgba(20,16,10,.55)}
+dialog h2{margin-bottom:10px}
+dialog li{margin:.3em 0}
+
+@media (max-width:980px){
+  .layout{grid-template-columns:1fr;padding:16px}
+  .tree-panel{position:static}
+}
+@media (max-width:560px){
+  html{font-size:17px}
+  .top{padding:10px 16px;position:static}
+  .swipe{display:block !important}
+  .steps{justify-content:flex-start}
+  .card{padding:16px}
+}
+</style>
+</head>
+<body>
+<header class="top" id="top">
+  <div class="brand">
+    <h1>Roots and Branches</h1>
+    <p>One family in 632. Three moments. Today’s headlines.</p>
+  </div>
+  <nav class="steps" id="steps" aria-label="Lab steps"></nav>
+  <div class="meta">
+    <span class="pts" id="pts" title="Insight points">★ 0</span>
+    <button class="ghost" id="aboutBtn">How this works</button>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="tree-panel" aria-label="Family tree">
+    <div class="tree-head"><h2>The Quraysh family tree</h2><span id="treeHint">Click anyone to meet them</span></div>
+    <p class="swipe small muted" style="display:none;margin:0 6px 6px">Swipe sideways to see the whole tree.</p>
+    <div class="tree-scroll"><svg id="tree" viewBox="0 0 780 575" role="group" aria-label="Family tree of the Quraysh tribe"></svg></div>
+    <div class="legend">
+      <span><i style="background:var(--hashim-tint);border-color:var(--hashim)"></i>Hashim clan</span>
+      <span><i style="background:var(--umayya-tint);border-color:var(--umayya)"></i>Umayya clan</span>
+      <span><i style="background:var(--other-tint);border-color:var(--other)"></i>Other clans</span>
+      <span id="lg-ring" hidden><i style="background:#fff;border:4px solid var(--hashim)"></i>Party of ‘Ali</span>
+      <span id="lg-crown" hidden><i style="background:var(--gold);border-color:var(--ink);border-radius:50%"></i>Caliph, in order</span>
+      <span id="lg-kh" hidden><i style="background:var(--khariji-tint);border-color:var(--khariji)"></i>Kharijis</span>
+    </div>
+  </section>
+  <section class="panel" id="panel" aria-live="polite"></section>
+</main>
+
+<dialog id="about">
+  <h2>How this lab works</h2>
+  <p>About 10 minutes. Everything is a click. You make a prediction first, then the lab shows you what happened.</p>
+  <ol>
+    <li><b>Meet the family.</b> Find out who is related to whom.</li>
+    <li><b>Three moments.</b> 632, 657, and 680. Each one leaves a question that never went away.</li>
+    <li><b>Living branches.</b> Match news from 2026 to the moment it echoes.</li>
+    <li><b>Old roots or new reasons?</b> Take one conflict apart.</li>
+  </ol>
+  <p><b>Insight points.</b> A right answer on the first try earns 2. A clue or a second try earns 1. Clues are there to help, so use them when you are stuck.</p>
+  <p class="small muted">This lab prepares you for Discussion Forum 9. It gives you evidence and sources. The thinking in your video has to be yours. Main text: Chapter 8, “Islam to the Mamluks,” in <i>World History: Cultures, States, and Societies to 1500</i>.</p>
+  <div class="toolbar"><button class="btn" id="aboutClose">Got it</button></div>
+</dialog>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- data: the tree ---------- */
+const NODES = [
+  {id:"abdmanaf", name:"‘Abd Manaf", sub:"Quraysh tribe", x:360, y:34, clan:"root",
+   bio:"A leader of the Quraysh, the tribe that controlled Mecca and its caravan trade. Both rival clans on this tree descend from him.", sec:"8.6"},
+  {id:"hashim", name:"Hashim clan", x:200, y:118, clan:"hashim", group:true,
+   bio:"Muhammad’s clan. Respected in Mecca, but less wealthy than the Umayyads. Your textbook calls it the Hashimite Clan.", sec:"8.6"},
+  {id:"umayya", name:"Umayya clan", x:540, y:118, clan:"umayya", group:true,
+   bio:"The richest and most powerful branch of the Quraysh. They guarded the Ka‘ba, profited from pilgrims, and fought Muhammad’s movement for years.", sec:"8.7"},
+  {id:"muttalib", name:"‘Abd al-Muttalib", x:200, y:198, clan:"hashim",
+   bio:"Muhammad’s grandfather and head of the Hashim clan. Three of his sons matter for this story."},
+  {id:"abdallah", name:"Abdallah", x:72, y:278, clan:"hashim",
+   bio:"Muhammad’s father. He died just before his son was born.", sec:"8.6"},
+  {id:"abutalib", name:"Abu Talib", x:205, y:278, clan:"hashim",
+   bio:"Muhammad’s uncle. He raised the orphaned boy and protected him in Mecca until he died in 619. He is the father of ‘Ali. (Your textbook spells it Abu Thalib.)", sec:"8.6, 8.7"},
+  {id:"abbas", name:"‘Abbas", x:338, y:278, clan:"hashim",
+   bio:"Another of Muhammad’s uncles. About a century later, his descendants overthrew the Umayyads and founded the ‘Abbasid Caliphate (750).", sec:"8.10"},
+  {id:"muhammad", name:"Muhammad", x:72, y:358, clan:"hashim",
+   bio:"The Prophet of Islam (c. 570 to 632). In Medina he was religious, political, judicial, legislative, and military leader all at once. He died without formally naming a successor.", sec:"8.7, 8.8"},
+  {id:"abbasids", name:"‘Abbasids", x:338, y:358, clan:"hashim", group:true,
+   bio:"The ‘Abbasids won support by stressing their link to the Prophet’s family. Once in power (750), they ruled as Sunni caliphs from Baghdad and turned on their Shi‘a allies.", sec:"8.10"},
+  {id:"fatima", name:"Fatima", x:72, y:440, clan:"hashim",
+   bio:"Muhammad’s daughter. She married her father’s cousin ‘Ali. Families who claim descent from the Prophet trace it through her.", sec:"8.8"},
+  {id:"ali", name:"‘Ali", x:205, y:440, clan:"hashim",
+   bio:"Muhammad’s cousin and son-in-law, and one of the first converts. He fought beside Muhammad and advised the early leaders on questions of faith.", sec:"8.8, 8.9"},
+  {id:"hasan", name:"Hasan", x:95, y:524, clan:"hashim",
+   bio:"‘Ali’s elder son and the Prophet’s grandson. He died in 669.", sec:"8.9"},
+  {id:"husayn", name:"Husayn", x:215, y:524, clan:"hashim",
+   bio:"‘Ali’s younger son and the Prophet’s grandson. His choice in 680 is the third moment of this lab.", sec:"8.9"},
+  {id:"kharijis", name:"Kharijis", x:338, y:524, clan:"khariji", group:true, hidden:true,
+   bio:"Soldiers who walked out on ‘Ali after he agreed to arbitration at Siffin (657). The name comes from kharaja, “to depart.” Their slogan: “Judgement belongs to God alone” (Quran 6:57).", sec:"8.8"},
+  {id:"abusufyan", name:"Abu Sufyan", x:458, y:278, clan:"umayya",
+   bio:"Umayyad leader in Mecca who led the fight against Muhammad before converting to Islam. Father of Mu‘awiya."},
+  {id:"uthman", name:"‘Uthman", x:584, y:278, clan:"umayya",
+   bio:"An early convert and a pious man from the Umayyad clan, but a poor administrator who gave top jobs to his relatives.", sec:"8.8"},
+  {id:"muawiya", name:"Mu‘awiya", x:470, y:358, clan:"umayya",
+   bio:"Governor of Syria and ‘Uthman’s cousin. He fought against Muhammad until 628, then converted and became the Prophet’s secretary.", sec:"8.8, 8.9"},
+  {id:"yazid", name:"Yazid", x:470, y:440, clan:"umayya",
+   bio:"Mu‘awiya’s son. Known as a fierce fighter, and criticized by pious Muslims for his lifestyle.", sec:"8.9"},
+  {id:"abubakr", name:"Abu Bakr", sub:"Taym clan", x:708, y:358, clan:"other",
+   bio:"Muhammad’s closest friend and the father of ‘A’isha. He came from the small Taym clan, outside the two big rivals.", sec:"8.8"},
+  {id:"aisha", name:"‘A’isha", x:708, y:440, clan:"other",
+   bio:"Abu Bakr’s daughter and Muhammad’s wife. In 656 she led an army against ‘Ali at the Battle of the Camel.", sec:"8.8"},
+  {id:"umar", name:"‘Umar", sub:"‘Adi clan", x:708, y:524, clan:"other",
+   bio:"One of Muhammad’s closest companions, a forceful and uncompromising leader from another small clan.", sec:"8.8"}
+];
+const NODE = Object.fromEntries(NODES.map(n => [n.id, n]));
+const EDGES = [
+  ["abdmanaf","hashim"],["abdmanaf","umayya","dot"],["hashim","muttalib"],
+  ["muttalib","abdallah"],["muttalib","abutalib"],["muttalib","abbas"],
+  ["abdallah","muhammad"],["abbas","abbasids","dot"],["muhammad","fatima"],["abutalib","ali"],
+  ["umayya","abusufyan","dot"],["umayya","uthman","dot"],["abusufyan","muawiya"],["muawiya","yazid"],
+  ["abubakr","aisha"]
+];
+const CALIPHS = [["abubakr",1,"p632"],["umar",2,"p632"],["uthman",3,"p632"],["ali",4,"p661"],["muawiya",5,"p661"],["yazid",6,"pyazid"]];
+
+const TAGS = {
+  leads:{label:"WHO LEADS?", text:"Does the right to lead come from the community’s choice, or from the Prophet’s family?"},
+  judges:{label:"WHO JUDGES?", text:"Who decides whether a ruler is legitimate? Can believers walk away from a ruler they think has gone wrong?"},
+  remembers:{label:"WHO REMEMBERS?", text:"How does a community keep a painful defeat alive and turn it into a story about standing up to injustice?"}
+};
+
+/* ---------- data: questions ---------- */
+const Q = {
+  q1:{prompt:"Find Muhammad and Mu‘awiya on the tree. How are they related?",
+    options:[
+      {t:"They come from rival tribes that had nothing in common.", why:"Follow both lines up to the top of the tree. Where do they meet?"},
+      {t:"Same tribe, rival clans. They share an ancestor, ‘Abd Manaf.", ok:true},
+      {t:"They are brothers.", why:"Check their fathers. Muhammad’s father is Abdallah. Mu‘awiya’s father is Abu Sufyan."}],
+    clue:{text:"The two lines are now lit up on the tree. Trace each one upward.", hl:["muhammad","abdallah","muttalib","hashim","abdmanaf","umayya","abusufyan","muawiya"]},
+    reveal:"The Sunni and Shi‘a split begins as a quarrel inside one extended family, the Quraysh of Mecca. Remember that the next time a headline calls it an “ancient religious hatred.” It started as a family argument about who should lead."},
+  q2:{prompt:"Two people on the tree belong to neither big clan, yet they will matter enormously. Which pair?",
+    options:[
+      {t:"‘Ali and ‘Abbas", why:"Both are Hashim clan. Look for the gold boxes."},
+      {t:"Abu Bakr and ‘Umar", ok:true},
+      {t:"‘Uthman and Mu‘awiya", why:"Both are Umayya clan. Look for the gold boxes."}],
+    clue:{text:"Look for the gold boxes on the right side of the tree.", hl:["abubakr","umar","aisha"]},
+    reveal:"Abu Bakr and ‘Umar came from small clans. Hold on to that. In 632, an outsider looks like a safe compromise to a family split between two powerful clans."},
+
+  o632:{prompt:"If you were there, what should decide the next leader?", opinion:true,
+    options:[
+      {t:"The elders agree on the wisest, most trusted believer.", why:"Hold that thought. Many people in Medina argued for exactly this. Your answer is one of the two answers that split Islam."},
+      {t:"The leader should come from the Prophet’s own family.", why:"Hold that thought. Many people in Medina argued for exactly this. Your answer is one of the two answers that split Islam."}]},
+  p632:{pick:true, prompt:"Predict: who did the elders choose as the first caliph? Click that person on the tree.",
+    accept:"abubakr",
+    wrong:{ali:"‘Ali’s supporters wanted him. The elders passed him over, and they would pass him over two more times.",
+           _:"Not this one. Think of a trusted outsider, Muhammad’s closest friend and father-in-law."},
+    clue:{text:"The elders wanted someone from outside the two rival clans.", hl:["abubakr","umar"]},
+    reveal:"The elders chose <b>Abu Bakr</b>, then <b>‘Umar</b>, then <b>‘Uthman</b>. Watch the gold numbers appear on the tree. ‘Ali’s supporters, the <i>Shi‘at ‘Ali</i> or “party of ‘Ali,” believed the Prophet had wanted ‘Ali. Their branch now has a dark green ring."},
+
+  siffin:{prompt:"Some of ‘Ali’s own soldiers are furious that he agreed to talk. Predict: what do they do?",
+    options:[
+      {t:"They switch sides and join Mu‘awiya.", why:"They opposed Mu‘awiya too. Their anger was about who has the right to decide."},
+      {t:"They walk out and form a group of their own.", ok:true},
+      {t:"They force ‘Ali to step down.", why:"‘Ali stayed in power until 661. These soldiers did something more drastic."}],
+    clue:{text:"Their name, Kharijis, comes from the Arabic kharaja, “to depart.”"},
+    reveal:"They became the <b>Kharijis</b>, the first sect in Islam. Their slogan was “Judgement belongs to God alone” (Quran 6:57). To them, letting humans negotiate over leadership took the decision away from God. A ruler who sinned had lost the right to rule. A new purple branch now hangs from ‘Ali."},
+  p661:{pick:true, prompt:"In 661, a Khariji killed one person on this tree, during prayers. Click who.",
+    accept:"ali",
+    wrong:{_:"Not this one. The Kharijis blamed the leader who had agreed to the arbitration."},
+    clue:{text:"Who agreed to the talks at Siffin?", hl:["ali","muawiya"]},
+    reveal:"<b>‘Ali</b> was killed in 661. Mu‘awiya took the caliphate and founded the Umayyad Caliphate in Damascus. ‘Ali’s son Hasan stepped aside, in exchange for a promise that the elders would choose the next caliph."},
+
+  pyazid:{pick:true, prompt:"Mu‘awiya promised Hasan that the elders would choose the next caliph. Who did Mu‘awiya name instead? Click him.",
+    accept:"yazid",
+    wrong:{_:"Not this one. Look at Mu‘awiya’s own branch of the tree."},
+    clue:{text:"Look straight down from Mu‘awiya.", hl:["muawiya","yazid"]},
+    reveal:"His son <b>Yazid</b>. For the first time, the caliphate passed from father to son. The election of caliphs by the elders was over."},
+  karbala:{prompt:"Predict: what did Husayn do?",
+    options:[
+      {t:"He gave in and swore loyalty to Yazid.", why:"If he had, there would be nothing for millions of people to remember every year."},
+      {t:"He escaped to Mecca and lived quietly.", why:"That was his brother Hasan’s path. Husayn chose differently."},
+      {t:"He refused to submit, and he and his companions were killed.", ok:true}],
+    clue:{text:"Shi‘a Muslims still mourn this day every year. It is called Ashura."},
+    reveal:"Husayn was killed at <b>Karbala</b> along with family members and followers. Many Shi‘a felt deep guilt that they had not come to help. His death became the central story of Shi‘a Islam: a righteous few standing against an unjust ruler. Shi‘a Muslims still remember it every year on <b>Ashura</b>, the 10th day of the month of Muharram."}
+};
+
+const MOMENTS = [
+  {year:"632", tag:"leads", title:"The Prophet has died",
+   scene:"June 632, Medina. The Prophet Muhammad has died without formally naming a successor. The community splits into groups, and each one is ready to name its own leader.",
+   qs:["o632","p632"]},
+  {year:"657", tag:"judges", title:"‘Ali agrees to talk",
+   scene:"Rebels kill the caliph ‘Uthman in 656, and ‘Ali finally becomes caliph. Mu‘awiya, ‘Uthman’s cousin and the governor of Syria, refuses to accept him and demands revenge. In 657 their armies meet at Siffin, on the Euphrates. After months of fighting, ‘Ali agrees to settle the dispute through arbitration.",
+   qs:["siffin","p661"]},
+  {year:"680", tag:"remembers", title:"Surrounded at Karbala",
+   scene:"Husayn, the Prophet’s grandson, refuses to swear loyalty to Yazid. He sets out with a small band of family and followers. At Karbala, in Iraq, Yazid’s army surrounds them. Many of his men desert.",
+   pre:"pyazid", qs:["karbala"]}
+];
+
+/* ---------- data: living branches ---------- */
+const SRC = {
+  textbook:"Berger, E., Israel, G. L., Miller, C., Parkinson, B., Reeves, A., & Williams, N. (2016). <i>World history: Cultures, states, and societies to 1500</i> (Chapter 8, Islam to the Mamluks, by B. Parkinson). University of North Georgia Press.",
+  iran:{apa:"Radio Farda, & Pourostad, V. (2026, March 8). Mojtaba Khamenei follows in father’s footsteps as Iran’s new supreme leader. <i>Radio Free Europe/Radio Liberty</i>.", url:"https://www.rferl.org/a/iran-names-khamenei-supreme-leader-us-israel/33698945.html"},
+  yemen:{apa:"Al Jazeera Staff & Agence France-Presse. (2026, October 24). Houthis launch attacks on Saudi Arabia and Yemen’s Aden. <i>Al Jazeera</i>.", url:"https://www.aljazeera.com/news/2026/10/24/houthis-launch-attacks-on-saudi-arabia-and-yemens-aden"},
+  houthi:{apa:"Britannica. (n.d.). Houthi movement. In <i>Encyclopaedia Britannica</i>.", url:"https://www.britannica.com/topic/Houthi-movement"},
+  lebanon:{apa:"Associated Press. (2026, June 26). Massive Shiite crowds mark the holy day of Ashoura against backdrop of Iran-Israel-US war fallout. <i>The Boston Globe</i>.", url:"https://www.bostonglobe.com/2026/06/26/world/massive-shiite-crowds-mark-holy-day-ashoura-against-backdrop-iran-israel-us-war-fallout/"},
+  iraq:{apa:"Arraf, J., al-Taie, A., & Qusay, A. (2026, August 10). Despite Mideast wars, 20 million gather in Iraq for Shia pilgrimage. <i>NPR</i>.", url:"https://www.vpm.org/npr-news/2026-08-10/despite-mideast-wars-20-million-gather-in-iraq-for-shia-pilgrimage"},
+  oman:{apa:"Batrawy, A. (2026, February 27). How Oman mediates in U.S.-Iran talks. <i>NPR</i>.", url:"https://www.npr.org/2026/02/27/nx-s1-5727719/how-oman-mediates-in-u-s-iran-talks"},
+  ibadi:{apa:"Britannica. (n.d.). Ibāḍiyyah. In <i>Encyclopaedia Britannica</i>.", url:"https://www.britannica.com/topic/Ibadiyyah"},
+  jordan:{apa:"Government of Jordan. (n.d.). <i>Hashemite monarchs of Jordan</i>.", url:"https://jordan.gov.jo/EN/Pages/Hashemite_Monarchs_of_Jordan"},
+  lebanon2:{apa:"Sharma, Y. (2026, June 27). Israel-Lebanon deal ties ceasefire to Hezbollah disarmament: Will it work? <i>Al Jazeera</i>.", url:"https://www.aljazeera.com/features/2026/6/27/israel-lebanon-deal-ties-ceasefire-to-hezbollah-disarmament-will-it-work"},
+  un:{apa:"United Nations. (2026, October 6). In Islamabad, Guterres calls for end to US-Iran conflict. <i>UN News</i>.", url:"https://news.un.org/en/story/2026/10/1168532"}
+};
+
+const LEAVES = [
+  {id:"iran", place:"Iran", when:"March 2026", head:"Iran’s new Supreme Leader is the old leader’s son",
+   clue:"After a US-Israeli airstrike killed Supreme Leader Ali Khamenei, a council of senior clerics chose his son Mojtaba to replace him. Critics asked whether the top job had become hereditary. One said it “resembles the optics of a monarchy.”",
+   extra:"The Khamenei family traces its line to Husayn, so its men carry the title Sayyid, “descendant of the Prophet.”",
+   tag:"leads", side:"shia", hl:["muawiya","yazid","husayn"],
+   echo:"This is the 632 question again: where does the right to lead come from? Iran’s Shi‘a system honors the Prophet’s bloodline through ‘Ali and Husayn. Yet critics compared a son inheriting his father’s power to a monarchy. Pious Muslims raised the same complaint when Mu‘awiya handed the caliphate to his son Yazid.",
+   limits:"The chapter cannot explain the 2026 war itself, the Revolutionary Guard’s pressure on the clerics, or the protests inside Iran.",
+   src:["iran"]},
+  {id:"yemen", place:"Yemen", when:"October 2026", head:"Houthi missiles hit Saudi Arabia and Aden",
+   clue:"The Iran-backed Houthis fired missiles and drones at Saudi airports and oil sites, and at Aden, the base of Yemen’s Saudi-backed government.",
+   extra:"Houthi leaders come from a family of sayyids. For about a thousand years, until a revolution in 1962, imams who claimed descent from the Prophet ruled northern Yemen.",
+   tag:"leads", side:"shia", hl:["ali","fatima","hasan","husayn"],
+   echo:"The Houthi movement grew out of the Zaydi branch of Shi‘a Islam in northern Yemen. Zaydis taught that the rightful imam must come from the Prophet’s family through ‘Ali and Fatima. That is the bloodline answer to the 632 question.",
+   limits:"The chapter cannot explain Iran’s missiles, Saudi Arabia’s war aims, or the fight over Yemen’s ports, roads, and Red Sea shipping.",
+   src:["yemen","houthi"]},
+  {id:"lebanon", place:"Lebanon", when:"June 2026", head:"“Ashoura is being repeated again”",
+   clue:"On Ashura, Hezbollah’s leader Naim Qassem told supporters that the US and Israel were repeating Ashura against his movement and against Iran.",
+   extra:"Ashura falls on the 10th day of the month of Muharram. Your chapter explains what happened on that day.",
+   tag:"remembers", side:"shia", hl:["husayn","yazid"],
+   echo:"Ashura marks Husayn’s death at Karbala in 680. When Qassem says “Ashoura is being repeated,” he casts his movement as Husayn, the righteous few, and his enemies as Yazid’s army. A story that is 1,346 years old becomes a way to rally people in a modern war.",
+   limits:"The chapter cannot explain Israel’s occupation of southern Lebanon, the fight over Hezbollah’s weapons, or Iran’s funding of the group.",
+   note:"The AP spells his name Kassem.",
+   src:["lebanon"]},
+  {id:"iraq", place:"Iraq", when:"August 2026", head:"About 20 million people walk to Karbala",
+   clue:"During a regional war, roughly 20 million pilgrims, more than 3 million of them from Iran, filled the Iraqi city of Karbala for Arbaeen. Some carried portraits of Iran’s slain leader.",
+   extra:"Arbaeen means “fortieth.” It comes 40 days after Ashura.",
+   tag:"remembers", side:"shia", hl:["husayn"],
+   echo:"Arbaeen marks 40 days after Husayn’s death at Karbala, where he is buried. Most of these walkers come to mourn and pray, so this echo is about faith and memory more than war. The portraits of Khamenei show how fast politics can join a religious crowd.",
+   limits:"The chapter cannot tell you why each walker came. Some come for faith, some for family tradition, some to make a political point.",
+   src:["iraq"]},
+  {id:"oman", place:"Oman", when:"February 2026", head:"The region’s “quiet listener” carries messages between the US and Iran",
+   clue:"Oman’s foreign minister shuttled between American and Iranian negotiators who would not meet face to face. One analyst said Oman “does not impose its agenda.”",
+   extra:"Most Omani Muslims are Ibadis. Their movement began among people who rejected ‘Ali’s arbitration at Siffin, then turned away from Khariji violence.",
+   tag:"judges", side:"ibadi", hl:["kharijis","ali"],
+   echo:"The Ibadis grew out of the same walkout at Siffin that produced the Kharijis, the people who said “Judgement belongs to God alone.” Over the centuries the Ibadis became known for moderation, and Ibadis today reject the Khariji label. Now a country shaped by that tradition is the region’s go-between.",
+   limits:"Oman’s role as mediator comes mostly from modern choices: staying out of wars and keeping friends on every side. The chapter supplies the root. Today’s diplomacy supplies the reasons.",
+   src:["oman","ibadi"]},
+  {id:"jordan", place:"Jordan", when:"Background", background:true, head:"A king who descends from the Prophet",
+   clue:"Jordan’s government calls King Abdullah II a 41st-generation direct descendant of the Prophet Muhammad. His family name, Hashemite, comes from a clan on your tree.",
+   extra:"The family traces its line through Hasan, son of ‘Ali and Fatima.",
+   tag:"leads", side:"sunni", hl:["hashim","fatima","ali","hasan"],
+   echo:"Surprise: the king is a Sunni Muslim. Sunnis honor the Prophet’s family too. The split in 632 was over a narrower question. Does belonging to that family give someone the right to lead the whole community? The party of ‘Ali said yes. Those later called Sunnis said the community should choose.",
+   limits:"This is background, not a recent news event, so it cannot be one of your two news examples.",
+   src:["jordan"]}
+];
+const SIDES = [["sunni","Sunni"],["shia","Shi‘a"],["ibadi","Ibadi (Khariji roots)"]];
+
+/* ---------- data: old roots or new reasons ---------- */
+const CONFLICTS = {
+  yemen:{name:"Yemen’s war", src:["yemen","houthi"],
+    facts:[
+      {t:"Houthi leaders come from a family that claims descent from the Prophet through ‘Ali and Fatima.", a:"old", why:"Descent through ‘Ali and Fatima is the bloodline answer to the 632 question."},
+      {t:"Iran arms the Houthis. Saudi Arabia backs the government the Houthis are fighting.", a:"new", why:"The Saudi-Iranian contest for power in the Gulf is a modern rivalry."},
+      {t:"Imams from the Prophet’s family ruled northern Yemen for about 1,000 years, until a revolution in 1962.", a:"old", why:"The Zaydi imams claimed their right to rule through the Prophet’s family line."},
+      {t:"In 2026 the Houthis struck Saudi airports and oil sites and threatened shipping near the Red Sea.", a:"new", why:"Airports, oil, and shipping lanes are 21st-century targets."}],
+    note:"Half old, half new. The family story explains who the Houthis are and why they reject rulers outside the Prophet’s line. Regional rivals, weapons, and trade routes explain why the war widened in 2026."},
+  lebanon:{name:"Hezbollah and Israel", src:["lebanon","lebanon2"],
+    facts:[
+      {t:"Hezbollah marks Ashura every year and compares its fight to Husayn’s stand at Karbala.", a:"old", why:"Karbala in 680 supplies the story and the courage."},
+      {t:"Israel occupies almost 20 percent of Lebanon’s territory in the south and demands that Hezbollah give up its weapons.", a:"new", why:"Land and weapons are the issue here."},
+      {t:"Iran has funded and armed Hezbollah since the group formed in the 1980s.", a:"new", why:"This is modern alliance politics."},
+      {t:"Lebanon shares power by religion. By custom the president is a Christian, the prime minister a Sunni, and the speaker of parliament a Shi‘a Muslim.", a:"new", why:"This system dates from 1943, long after the 7th century."}],
+    note:"Mostly new reasons. Karbala gives Hezbollah its language and its sense of sacrifice. Land, weapons, and foreign backers drive the fighting."},
+  iran:{name:"Iran’s war of 2026", src:["iran","un"],
+    facts:[
+      {t:"Iran’s system says a senior cleric should guide the country until the hidden Twelfth Imam, a descendant of ‘Ali, returns.", a:"old", why:"The line of Imams is the bloodline of ‘Ali and Husayn."},
+      {t:"The US and Israel attacked Iran in February 2026, saying they wanted to stop an Iranian nuclear weapon.", a:"new", why:"Nuclear weapons are a modern fear."},
+      {t:"Iran blocked the Strait of Hormuz, a channel for much of the world’s oil, and trade suffered worldwide.", a:"new", why:"Oil and trade routes are modern stakes."},
+      {t:"Iran’s new Supreme Leader comes from a family that traces its line to Husayn.", a:"old", why:"Descent from Husayn borrows the prestige of 680."}],
+    note:"Half old, half new. The Imams and the bloodline explain how Iran’s leaders claim the right to rule. Nuclear fears, oil, and great-power rivalry explain the war."}
+};
+const FINAL = {prompt:"Look back at all three steps. What do you notice?",
+  options:[
+    {t:"These wars are the same fight that began in 632, still going after 1,400 years.", why:"If that were true, Shi‘a Iran would never arm Sunni groups like Hamas, and a Sunni king would not prize descent from the Prophet. The old story matters, but it does not decide every alliance."},
+    {t:"Religion has nothing to do with them. It is all oil and politics.", why:"Then why would 20 million people walk to Karbala, or a militia leader rally fighters with the story of Ashura?"},
+    {t:"The 7th century shaped who people trust and the stories they tell. Modern power, land, and money shape why they fight now.", ok:true}],
+  clue:{text:"Think about both the Arbaeen walkers and the Saudi-Iranian rivalry. Which answer explains both?"},
+  reveal:"That is the insight your video can build on. Pick one conflict. Show one root from the chapter. Then name one new reason the chapter cannot explain, and say how seeing both changed the way you read the news."};
+
+/* ---------- state ---------- */
+const KEY = "rootsBranches.v1";
+const fresh = () => ({step:1, maxStep:1, met:[], sel:null, q:{}, moment:0, leaf:null, leaves:{}, conflict:null, sorts:{}, checked:false, checklist:[]});
+let S = fresh();
+try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(fresh(), JSON.parse(raw)); } catch(e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} };
+let HL = [];
+
+const qs = id => S.q[id] || (S.q[id] = {tries:0, clue:false, done:false, wrong:[]});
+const qPts = (id, max) => { const s = S.q[id]; if (!s || !s.done) return 0; if (max === 1) return (s.tries === 0 && !s.clue) ? 1 : 0;
+  return s.tries === 0 && !s.clue ? 2 : (s.tries + (s.clue ? 1 : 0) <= 1 ? 1 : 0); };
+const leafPts = id => { const L = S.leaves[id]; if (!L || !L.done) return 0; return Math.max(0, (L.tagTries === 0 ? 1 : 0) + (L.sideTries === 0 ? 1 : 0) - (L.extra ? 1 : 0)); };
+function points(){
+  let p = 0;
+  ["q1","q2","p632","siffin","p661","pyazid","karbala","final"].forEach(id => p += qPts(id, 2));
+  LEAVES.forEach(l => p += leafPts(l.id));
+  if (S.checked && S.conflict) CONFLICTS[S.conflict].facts.forEach((f,i) => { if (S.sorts[i] === f.a) p += 1; });
+  return p;
+}
+const MAX = 4 + 10 + 12 + 6;
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+const STEP_NAMES = ["Meet the family","Three moments","Living branches","Old roots or new reasons?","Results"];
+const isDone = id => !!(S.q[id] && S.q[id].done);
+function stepComplete(n){
+  if (n === 1) return isDone("q1") && isDone("q2");
+  if (n === 2) return S.moment >= 3;
+  if (n === 3) return solvedCount() >= 4;
+  if (n === 4) return isDone("final");
+  return false;
+}
+const solvedCount = () => LEAVES.filter(l => S.leaves[l.id] && S.leaves[l.id].done).length;
+function go(n){ S.step = n; S.maxStep = Math.max(S.maxStep, n); HL = []; save(); render(); window.scrollTo({top:0, behavior:"smooth"}); }
+
+/* ---------- tree ---------- */
+function nodeW(n){ return Math.max(92, Math.round(n.name.length * 9.6 + 30)); }
+function nodeH(n){ return n.sub ? 52 : 40; }
+function renderTree(){
+  const svg = $("#tree");
+  const picking = currentPick();
+  svg.classList.toggle("picking", !!picking);
+  $(".tree-panel").classList.toggle("picking-on", !!picking);
+  const show = n => !n.hidden || isDone("siffin");
+  const ring = isDone("p632") ? ["ali","fatima","hasan","husayn"] : [];
+  let out = "";
+  out += `<rect x="640" y="290" width="136" height="264" rx="12" fill="none" stroke="var(--other)" stroke-dasharray="5 5"/>`;
+  out += `<text class="boxlabel" x="650" y="309">OTHER CLANS</text>`;
+  const elbow = (a, b, cls) => {
+    const y1 = a.y + nodeH(a)/2, y2 = b.y - nodeH(b)/2, my = (y1 + y2) / 2;
+    return `<path class="edge ${cls||""}" d="M${a.x},${y1} V${my} H${b.x} V${y2}"/>`;
+  };
+  EDGES.forEach(([f,t,c]) => out += elbow(NODE[f], NODE[t], c));
+  out += `<text class="via" x="${(360+540)/2+30}" y="72">via ‘Abd Shams</text>`;
+  // marriage of Fatima and Ali, with children
+  const fa = NODE.fatima, al = NODE.ali, mx = (fa.x + al.x) / 2;
+  out += `<path class="edge marry" d="M${fa.x + nodeW(fa)/2},${fa.y} H${al.x - nodeW(al)/2}"/>`;
+  ["hasan","husayn"].forEach(c => { const n = NODE[c]; out += `<path class="edge" d="M${mx},${fa.y} V${(fa.y+n.y)/2} H${n.x} V${n.y - 20}"/>`; });
+  if (isDone("siffin")) { const k = NODE.kharijis; out += `<path class="edge walk" d="M${al.x + nodeW(al)/2},${al.y} H${k.x} V${k.y - 20}"/>`; }
+  NODES.filter(show).forEach(n => {
+    const w = nodeW(n), h = nodeH(n);
+    const cls = ["node","c-" + n.clan];
+    if (n.group) cls.push("group");
+    if (S.met.includes(n.id)) cls.push("met");
+    if (S.sel === n.id && S.step === 1) cls.push("sel");
+    if (ring.includes(n.id)) cls.push("ring");
+    if (HL.includes(n.id)) cls.push("hl");
+    const label = n.name + (n.sub ? ", " + n.sub : "");
+    out += `<g class="${cls.join(" ")}" data-node="${n.id}" tabindex="0" role="button" aria-label="${esc(label)}">`;
+    out += `<rect x="${n.x - w/2}" y="${n.y - h/2}" width="${w}" height="${h}" rx="9"/>`;
+    out += n.sub
+      ? `<text x="${n.x}" y="${n.y - 4}" text-anchor="middle">${esc(n.name)}</text><text class="sub" x="${n.x}" y="${n.y + 15}" text-anchor="middle">${esc(n.sub)}</text>`
+      : `<text x="${n.x}" y="${n.y + 6}" text-anchor="middle">${esc(n.name)}</text>`;
+    out += `</g>`;
+  });
+  CALIPHS.forEach(([id, num, gate]) => {
+    if (!isDone(gate)) return;
+    const n = NODE[id], cx = n.x + nodeW(n)/2 - 2, cy = n.y - nodeH(n)/2 - 2;
+    out += `<g class="crown" aria-hidden="true"><circle cx="${cx}" cy="${cy}" r="12"/><text x="${cx}" y="${cy + 5}" text-anchor="middle">${num}</text></g>`;
+  });
+  if (isDone("karbala")) {
+    const n = NODE.husayn, cx = n.x - nodeW(n)/2 + 2, cy = n.y - 22;
+    out += `<g class="martyr" aria-hidden="true"><circle cx="${cx}" cy="${cy}" r="12"/><text x="${cx}" y="${cy + 4}" text-anchor="middle">680</text></g>`;
+  }
+  svg.innerHTML = out;
+  $("#lg-ring").hidden = !isDone("p632");
+  $("#lg-crown").hidden = !isDone("p632");
+  $("#lg-kh").hidden = !isDone("siffin");
+  $("#treeHint").textContent = picking ? "Click your answer on the tree" : (S.step === 1 ? "Click anyone to meet them" : "Click anyone to read about them");
+}
+
+/* ---------- question blocks ---------- */
+function currentPick(){
+  if (S.step !== 2 || S.moment > 2) return null;
+  const m = MOMENTS[S.moment];
+  const order = (m.pre ? [m.pre] : []).concat(m.qs);
+  for (const id of order) { if (!isDone(id)) return Q[id].pick ? id : null; }
+  return null;
+}
+function clueBtn(id){
+  const d = Q[id] || (id === "final" ? FINAL : null), s = qs(id);
+  if (!d.clue || s.done) return s.clue && d.clue ? `<div class="fb clue">💡 ${d.clue.text}</div>` : "";
+  return s.clue ? `<div class="fb clue">💡 ${d.clue.text}</div>` : `<div class="toolbar"><button class="btn clue" data-clue="${id}">💡 Clue (costs 1 point)</button></div>`;
+}
+function qBlock(id, def){
+  def = def || Q[id];
+  const s = qs(id);
+  let h = `<div class="q"><div class="prompt">${def.prompt}</div>`;
+  if (def.pick) {
+    if (!s.done) h += `<div class="pickhint"><b>👈</b> Click a person on the family tree.</div>`;
+    if (s.lastWrong && !s.done) h += `<div class="fb no">${s.lastWrong}</div>`;
+  } else {
+    h += `<div class="opts">`;
+    def.options.forEach((o, i) => {
+      const picked = s.wrong.includes(i), isRight = s.done && (o.ok || (def.opinion && s.choice === i));
+      const cls = isRight ? "ok" : picked ? "no" : "";
+      h += `<button class="opt ${cls}" data-q="${id}" data-i="${i}" ${s.done || picked ? "disabled" : ""}>${o.t}</button>`;
+    });
+    h += `</div>`;
+    const last = s.wrong[s.wrong.length - 1];
+    if (!s.done && last !== undefined) h += `<div class="fb no">${def.options[last].why}</div>`;
+  }
+  if (!def.opinion) h += clueBtn(id);
+  if (s.done) {
+    if (def.opinion) h += `<div class="fb ok">${def.options[s.choice].why}</div>`;
+    else { const p = qPts(id, 2); h += `<div class="fb ok">${def.reveal}<div class="earn">+${p} insight point${p === 1 ? "" : "s"}</div></div>`; }
+  }
+  return h + `</div>`;
+}
+function answer(id, i){
+  const def = id === "final" ? FINAL : Q[id], s = qs(id);
+  if (s.done) return;
+  if (def.opinion) { s.done = true; s.choice = i; }
+  else if (def.options[i].ok) { s.done = true; HL = []; }
+  else { s.tries++; s.wrong.push(i); }
+  save(); render(); scrollLatest();
+}
+function scrollLatest(){
+  const all = document.querySelectorAll("#panel .q, #panel .tagcard, #panel .toolbar");
+  const last = all[all.length - 1];
+  if (last) last.scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+function pickNode(nid){
+  const id = currentPick(); if (!id) return false;
+  const def = Q[id], s = qs(id);
+  if (nid === def.accept) { s.done = true; s.lastWrong = null; HL = []; }
+  else { s.tries++; s.lastWrong = (def.wrong[nid] || def.wrong._); }
+  save(); render(); scrollLatest(); return true;
+}
+
+/* ---------- panels ---------- */
+function panel1(){
+  const n = S.sel ? NODE[S.sel] : null, met = S.met.length, need = 5;
+  let h = `<div class="card"><div class="kicker">Step 1 of 4</div><h2>Meet the family</h2>
+    <p class="lead">Before Islam split into Sunni and Shi‘a, everyone in this story belonged to one tribe: the Quraysh of Mecca. Click people on the tree to meet them.</p>
+    <p><span class="counter">${Math.min(met, need)} of ${need} met</span> <span class="muted small">Meet at least ${need} to unlock the questions.</span></p>`;
+  if (n) h += `<div class="person"><h3>${esc(n.name)}${n.sub ? ` <span class="muted small">${esc(n.sub)}</span>` : ""}</h3><p>${n.bio}</p>${n.sec ? `<div class="sec">Textbook section ${n.sec}</div>` : ""}</div>`;
+  else h += `<div class="person muted">👈 Start with Muhammad, then try someone in red.</div>`;
+  h += `</div>`;
+  if (met >= need) {
+    h += `<div class="card"><h3>What do you notice?</h3>${qBlock("q1")}${isDone("q1") ? qBlock("q2") : ""}`;
+    if (stepComplete(1)) h += `<div class="toolbar"><button class="btn" data-go="2">Next: Three moments →</button></div>`;
+    h += `</div>`;
+  }
+  return h;
+}
+function tagCard(k){ const t = TAGS[k]; return `<div class="tagcard"><span class="tag ${k}">${t.label}</span><p>${t.text}</p></div>`; }
+function earnedTags(){ return MOMENTS.filter((m, i) => i < S.moment).map(m => `<span class="tag ${m.tag}">${TAGS[m.tag].label}</span>`).join(""); }
+function panel2(){
+  let h = `<div class="card"><div class="kicker">Step 2 of 4</div><h2>Three moments that split the family</h2>
+    <p>Each moment leaves behind a question that Muslims still argue about. Collect all three.</p>
+    <div class="tagstrip">${earnedTags() || `<span class="muted small">No questions collected yet.</span>`}</div></div>`;
+  if (S.moment > 2) {
+    h += `<div class="card"><div class="kicker">All three collected</div><h2>One family, three answers</h2>
+      <p>Look at the tree now. The leadership has moved from Abu Bakr’s small clan to the Umayyads, while the Prophet’s own grandsons were pushed aside.</p>
+      <p>Those who accepted the caliphs, even the Umayyads, for the sake of unity were later called <b>Sunnis</b>. The party of ‘Ali became the <b>Shi‘a</b>. The walkouts were the <b>Kharijis</b>.</p>
+      ${tagCard("leads")}${tagCard("judges")}${tagCard("remembers")}
+      <p class="muted small" style="margin-top:12px">Next, you will see these three questions in the news from 2026.</p>
+      <div class="toolbar"><button class="btn" data-go="3">Next: Living branches →</button></div></div>`;
+    return h;
+  }
+  const m = MOMENTS[S.moment];
+  h += `<div class="card"><div class="kicker">Moment ${S.moment + 1} of 3</div><div class="year">${m.year}</div><h2 style="margin-top:6px">${m.title}</h2>`;
+  if (m.pre) { h += qBlock(m.pre); if (!isDone(m.pre)) return h + `</div>`; }
+  h += `<div class="scene">${m.scene}</div>`;
+  for (const id of m.qs) { h += qBlock(id); if (!isDone(id)) return h + `</div>`; }
+  h += `<p style="margin-top:14px"><b>You collected a question:</b></p>${tagCard(m.tag)}
+    <div class="toolbar"><button class="btn" data-moment="1">${S.moment < 2 ? "Next moment →" : "See all three →"}</button></div></div>`;
+  return h;
+}
+function leafState(id){ return S.leaves[id] || (S.leaves[id] = {tagTries:0, sideTries:0, tag:null, side:null, wrongTag:[], wrongSide:[], extra:false, done:false}); }
+function panel3(){
+  let h = `<div class="card"><div class="kicker">Step 3 of 4</div><h2>Living branches</h2>
+    <p class="lead">The tree kept growing for 1,346 years. These leaves are from 2026. Open each one, read the clue, and decide which question it echoes and which branch it grows from.</p>
+    <div class="tagstrip">${["leads","judges","remembers"].map(k => `<span class="tag ${k}">${TAGS[k].label}</span>`).join("")}</div>
+    <p><span class="counter">${solvedCount()} of 6 solved</span> <span class="muted small">Solve at least 4 to move on.</span></p>
+    <div class="leaves">`;
+  LEAVES.forEach(l => {
+    const st = S.leaves[l.id];
+    h += `<button class="leaf ${S.leaf === l.id ? "open" : ""} ${st && st.done ? "solved" : ""}" data-leaf="${l.id}"><div class="place">${l.place}</div><div class="when">${l.when}</div></button>`;
+  });
+  h += `</div></div>`;
+  if (S.leaf) h += leafPanel(LEAVES.find(l => l.id === S.leaf));
+  if (stepComplete(3)) h += `<div class="card"><p>You have solved enough leaves to move on. You can come back to the rest any time.</p><div class="toolbar"><button class="btn" data-go="4">Next: Old roots or new reasons? →</button></div></div>`;
+  return h;
+}
+function leafPanel(l){
+  const st = leafState(l.id);
+  let h = `<div class="card" id="leafcard"><div class="kicker">${l.place}, ${l.when}</div>${l.background ? `<span class="badge">Background fact, not a news event</span>` : ""}
+    <div class="headline">${l.head}</div><p>${l.clue}</p>`;
+  h += st.extra ? `<div class="fb clue">💡 ${l.extra}</div>` : (st.done ? "" : `<div class="toolbar"><button class="btn clue" data-extra="${l.id}">💡 Extra clue (costs 1 point)</button></div>`);
+  h += `<div class="q"><div class="prompt">Which question from Step 2 does this echo?</div><div class="opts row">`;
+  ["leads","judges","remembers"].forEach(k => {
+    const cls = st.tag === k ? "ok" : st.wrongTag.includes(k) ? "no" : "";
+    h += `<button class="opt ${cls}" data-ltag="${k}" ${st.tag || st.wrongTag.includes(k) ? "disabled" : ""}><span class="tag ${k}">${TAGS[k].label}</span></button>`;
+  });
+  h += `</div>`;
+  if (!st.tag && st.wrongTag.length) h += `<div class="fb no">Not quite. Reread the clue. Is it about who has the right to rule, who may judge a ruler, or how a defeat is remembered?</div>`;
+  h += `</div>`;
+  if (st.tag) {
+    h += `<div class="q"><div class="prompt">Which branch of the family tree does this group grow from?</div><div class="opts row">`;
+    SIDES.forEach(([k, lab]) => {
+      const cls = st.side === k ? "ok" : st.wrongSide.includes(k) ? "no" : "";
+      h += `<button class="opt ${cls}" data-lside="${k}" ${st.side || st.wrongSide.includes(k) ? "disabled" : ""}>${lab}</button>`;
+    });
+    h += `</div>`;
+    if (!st.side && st.wrongSide.length) h += `<div class="fb no">${st.wrongSide.length > 1 ? "One choice left. Reread the extra clue if you have it." : "Not that one. A detail in the clue points to a particular branch."}</div>`;
+    h += `</div>`;
+  }
+  if (st.done) {
+    const p = leafPts(l.id);
+    h += `<div class="fb ok"><p><b>The echo.</b> ${l.echo}</p><p class="limits"><b>Beyond the chapter.</b> ${l.limits}</p>${l.note ? `<p class="small muted">${l.note}</p>` : ""}<div class="earn">+${p} insight point${p === 1 ? "" : "s"}</div></div>`;
+    h += `<div class="cite"><b>Source${l.src.length > 1 ? "s" : ""} (APA)</b>${l.src.map(k => `<p>${SRC[k].apa} <a href="${SRC[k].url}" target="_blank" rel="noopener">${SRC[k].url}</a></p>`).join("")}</div>`;
+    const next = LEAVES.find(x => !(S.leaves[x.id] && S.leaves[x.id].done));
+    if (next) h += `<div class="toolbar"><button class="btn alt" data-leaf="${next.id}">Next leaf: ${next.place} →</button></div>`;
+  }
+  return h + `</div>`;
+}
+function panel4(){
+  let h = `<div class="card"><div class="kicker">Step 4 of 4</div><h2>Old roots or new reasons?</h2>
+    <p class="lead">Pick one conflict to take apart. Sort each fact: does it come from the family story, or from today?</p>
+    <div class="choose">`;
+  Object.entries(CONFLICTS).forEach(([k, c]) => {
+    h += `<button class="opt ${S.conflict === k ? "ok" : ""}" data-conflict="${k}" ${S.checked ? "disabled" : ""}><b>${c.name}</b></button>`;
+  });
+  h += `</div></div>`;
+  if (!S.conflict) return h;
+  const c = CONFLICTS[S.conflict];
+  h += `<div class="card"><h3>${c.name}</h3><p class="small muted">🌳 Old roots: comes from the family story of 632 to 680. ⚡ New reasons: oil, land, weapons, money, or who holds power today.</p>`;
+  c.facts.forEach((f, i) => {
+    const mine = S.sorts[i], cls = S.checked ? (mine === f.a ? "right" : "wrong") : "";
+    h += `<div class="fact ${cls}"><div>${f.t}</div><div class="two">
+      <button class="${mine === "old" ? "pick" : ""}" data-sort="${i}" data-v="old" ${S.checked ? "disabled" : ""}>🌳 Old roots</button>
+      <button class="${mine === "new" ? "pick" : ""}" data-sort="${i}" data-v="new" ${S.checked ? "disabled" : ""}>⚡ New reasons</button></div>
+      ${S.checked ? `<div class="verdict">${mine === f.a ? "✓ Right." : "✗ This one is " + (f.a === "old" ? "🌳 Old roots." : "⚡ New reasons.")} ${f.why}</div>` : ""}</div>`;
+  });
+  const all = c.facts.every((f, i) => S.sorts[i]);
+  if (!S.checked) h += `<div class="toolbar"><button class="btn" data-check="1" ${all ? "" : "disabled"}>Check my sorting</button>${all ? "" : `<span class="muted small">Sort all four first.</span>`}</div>`;
+  else {
+    const o = c.facts.filter(f => f.a === "old").length, n = c.facts.length - o;
+    const right = c.facts.filter((f, i) => S.sorts[i] === f.a).length;
+    h += `<p style="margin-top:14px"><b>${right} of 4 sorted correctly.</b> Here is the real mix for this conflict:</p>
+      <div class="meter"><div class="o" style="flex-grow:${o}">🌳 ${o}</div><div class="n" style="flex-grow:${n}">⚡ ${n}</div></div>
+      <p>${c.note}</p>
+      <div class="cite"><b>Sources (APA)</b>${c.src.map(k => `<p>${SRC[k].apa} <a href="${SRC[k].url}" target="_blank" rel="noopener">${SRC[k].url}</a></p>`).join("")}</div>`;
+  }
+  h += `</div>`;
+  if (S.checked) {
+    h += `<div class="card"><h3>The big picture</h3>${qBlock("final", FINAL)}`;
+    if (isDone("final")) h += `<div class="toolbar"><button class="btn" data-go="5">See my results →</button></div>`;
+    h += `</div>`;
+  }
+  return h;
+}
+function code(){
+  const p = points();
+  const solved = LEAVES.map(l => S.leaves[l.id] && S.leaves[l.id].done ? 1 : 0).join("");
+  let n = p * 7919 + parseInt(solved, 2) * 131 + (Object.keys(CONFLICTS).indexOf(S.conflict) + 1) * 17;
+  const chk = (n % 46656).toString(36).toUpperCase().padStart(3, "0");
+  return `RB-${String(p).padStart(2, "0")}-${chk}`;
+}
+const CHECKS = [
+  "My video is 2 to 3 minutes long.",
+  "I explain at least one way this history gives insight into a current conflict.",
+  "I reflect on how learning about these differences changed how I see current events.",
+  "I use at least two news events from the past three years, and I cite them.",
+  "I reference the textbook.",
+  "I follow the APA Guidelines for Discussion Posts."
+];
+function panel5(){
+  const p = points(), solved = LEAVES.filter(l => S.leaves[l.id] && S.leaves[l.id].done);
+  const srcKeys = [];
+  solved.forEach(l => l.src.forEach(k => { if (!srcKeys.includes(k)) srcKeys.push(k); }));
+  if (S.conflict) CONFLICTS[S.conflict].src.forEach(k => { if (!srcKeys.includes(k)) srcKeys.push(k); });
+  let h = `<div class="card"><div class="kicker">Results</div><h2>You traced the roots</h2>
+    <div class="score">★ ${p} <span class="muted" style="font-size:1.2rem">of ${MAX}</span></div>
+    <p>Your completion code for Canvas:</p><div class="code">${code()}</div>
+    <p class="small muted" style="margin-top:8px">Copy this code, or take a screenshot of this card, and submit it where your instructor asks.</p></div>`;
+  h += `<div class="card"><h3>Your sources</h3><p class="small muted">The textbook, plus the articles behind the leaves you solved. Open each article before you use it. Your video needs two news events from the past three years.</p>
+    <div class="cite"><p>${SRC.textbook}</p>${srcKeys.map(k => `<p>${SRC[k].apa} <a href="${SRC[k].url}" target="_blank" rel="noopener">${SRC[k].url}</a></p>`).join("")}</div>
+    <div class="toolbar"><button class="btn alt" data-copy="1">Copy sources</button><span id="copied" class="muted small"></span></div></div>`;
+  h += `<div class="card"><h3>Before you record</h3><p class="small muted">Check these off as you plan your Discussion Forum 9 video.</p>`;
+  CHECKS.forEach((c, i) => h += `<label class="check"><input type="checkbox" data-cl="${i}" ${S.checklist.includes(i) ? "checked" : ""}><span>${c}</span></label>`);
+  h += `</div><div class="card"><div class="toolbar"><button class="btn alt" data-go="3">Back to the leaves</button><button class="btn alt" data-reset="1">Start over</button></div></div>`;
+  return h;
+}
+
+/* ---------- render ---------- */
+function render(){
+  $("#steps").innerHTML = STEP_NAMES.map((n, i) => {
+    const k = i + 1, open = k <= S.maxStep;
+    return `<button class="${S.step === k ? "on" : ""} ${stepComplete(k) ? "done" : ""}" data-go="${k}" ${open ? "" : "disabled"}>${k < 5 ? k + ". " : ""}${n}</button>`;
+  }).join("");
+  $("#pts").textContent = "★ " + points();
+  renderTree();
+  $("#panel").innerHTML = [null, panel1, panel2, panel3, panel4, panel5][S.step]();
+  document.documentElement.style.setProperty("--top", ($("#top").offsetHeight + 16) + "px");
+}
+
+/* ---------- events ---------- */
+function onNode(id){
+  if (pickNode(id)) return;
+  if (!S.met.includes(id)) S.met.push(id);
+  S.sel = id;
+  if (S.step !== 1) { showBio(id); return; }
+  save(); render();
+}
+function showBio(id){
+  const n = NODE[id];
+  const d = $("#about");
+  d.innerHTML = `<h2>${esc(n.name)}</h2><p>${n.bio}</p>${n.sec ? `<p class="sec">Textbook section ${n.sec}</p>` : ""}<div class="toolbar"><button class="btn" id="aboutClose">Close</button></div>`;
+  d.dataset.bio = "1"; d.showModal();
+}
+const ABOUT = $("#about").innerHTML;
+$("#tree").addEventListener("click", e => { const g = e.target.closest("[data-node]"); if (g) onNode(g.dataset.node); });
+$("#tree").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { const g = e.target.closest("[data-node]"); if (g) { e.preventDefault(); onNode(g.dataset.node); } } });
+$("#aboutBtn").addEventListener("click", () => { const d = $("#about"); d.innerHTML = ABOUT; d.showModal(); });
+$("#about").addEventListener("click", e => { if (e.target.id === "aboutClose" || e.target === e.currentTarget) e.currentTarget.close(); });
+$("#about").addEventListener("close", () => { try { localStorage.setItem(KEY + ".seen", "1"); } catch(e) {} });
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("button, input"); if (!b || b.closest("#tree")) return;
+  const d = b.dataset;
+  if (d.go) return go(+d.go);
+  if (d.q !== undefined && d.i !== undefined) return answer(d.q, +d.i);
+  if (d.clue) { const s = qs(d.clue), def = d.clue === "final" ? FINAL : Q[d.clue]; s.clue = true; HL = (def.clue && def.clue.hl) || []; save(); return render(); }
+  if (d.moment) { S.moment++; HL = []; save(); render(); return window.scrollTo({top:0, behavior:"smooth"}); }
+  if (d.leaf) { S.leaf = d.leaf; const l = LEAVES.find(x => x.id === d.leaf); const st = S.leaves[d.leaf]; HL = st && st.done ? l.hl : []; save(); render(); const c = $("#leafcard"); if (c) c.scrollIntoView({behavior:"smooth", block:"start"}); return; }
+  if (d.extra) { leafState(d.extra).extra = true; save(); return render(); }
+  if (d.ltag) { const l = LEAVES.find(x => x.id === S.leaf), st = leafState(l.id);
+    if (d.ltag === l.tag) st.tag = d.ltag; else { st.tagTries++; st.wrongTag.push(d.ltag); }
+    save(); return render(); }
+  if (d.lside) { const l = LEAVES.find(x => x.id === S.leaf), st = leafState(l.id);
+    if (d.lside === l.side) { st.side = d.lside; st.done = true; HL = l.hl; } else { st.sideTries++; st.wrongSide.push(d.lside); }
+    save(); return render(); }
+  if (d.conflict) { if (S.conflict !== d.conflict) { S.conflict = d.conflict; S.sorts = {}; } save(); return render(); }
+  if (d.sort !== undefined) { S.sorts[d.sort] = d.v; save(); return render(); }
+  if (d.check) { S.checked = true; save(); return render(); }
+  if (d.cl !== undefined) { const i = +d.cl; S.checklist = b.checked ? S.checklist.concat(i) : S.checklist.filter(x => x !== i); save(); return; }
+  if (d.copy) {
+    const text = Array.from(document.querySelectorAll(".panel .cite p")).map(p => p.textContent.trim()).join("\n\n");
+    const done = () => { const c = $("#copied"); if (c) c.textContent = "Copied."; };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+    else fallbackCopy(text, done);
+    return;
+  }
+  if (d.reset) { if (confirm("Start the whole lab over? Your points will be cleared.")) { S = fresh(); HL = []; save(); render(); window.scrollTo({top:0}); } }
+});
+function fallbackCopy(text, done){
+  const t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select();
+  try { document.execCommand("copy"); done(); } catch(e) {}
+  t.remove();
+}
+window.addEventListener("resize", () => document.documentElement.style.setProperty("--top", ($("#top").offsetHeight + 16) + "px"));
+
+render();
+let seen = null; try { seen = localStorage.getItem(KEY + ".seen"); } catch(e) {}
+if (!seen) $("#about").showModal();
+})();
+</script>
+</body>
+</html>
